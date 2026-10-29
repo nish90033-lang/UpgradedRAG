@@ -1,0 +1,77 @@
+name: ci
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      scifact:
+        description: "Also run the SciFact ablation (downloads models and data)"
+        type: boolean
+        default: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: smartrag
+          POSTGRES_PASSWORD: smartrag
+          POSTGRES_DB: smartrag_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U smartrag" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://smartrag:smartrag@localhost:5432/smartrag_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - run: ruff check . && ruff format --check .
+      - run: python -m pytest -q
+      - name: Pipeline check with test doubles
+        run: make smoke
+      - name: Injection evaluation
+        run: python -m evals.injection_eval
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: pip install -e .
+      - run: cd frontend && npm ci && npm run build && npm test
+      - name: End-to-end against the demo backend
+        run: |
+          python -m smartrag.demo &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8000/health && break; sleep 1; done
+          cd frontend && npm run test:e2e
+
+  scifact:
+    if: github.event_name == 'workflow_dispatch' && inputs.scifact
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev,ml]"
+      - run: make scifact
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scifact-results
+          path: results/

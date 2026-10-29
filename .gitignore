@@ -1,0 +1,54 @@
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Testing and linting
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Python packaging
+*.egg-info/
+dist/
+build/
+
+# Local data and generated results
+data/*
+!data/.gitkeep
+results/
+.cache/
+cache/
+
+# Model weights and generated artifacts
+*.pkl
+*.pickle
+*.joblib
+*.pt
+*.pth
+*.safetensors
+*.onnx
+
+# Frontend dependencies
+node_modules/
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

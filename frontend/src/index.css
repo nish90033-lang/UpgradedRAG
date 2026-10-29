@@ -1,0 +1,20 @@
+/* index.css — global baseline only. App-level styles live in app.css. */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+/* Autofill override — keeps inputs readable on dark backgrounds */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #08101f inset !important;
+  -webkit-text-fill-color: #f4f8fb !important;
+  caret-color: #f4f8fb;
+}
